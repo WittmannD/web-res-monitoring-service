@@ -37,4 +37,4 @@ class MonitoringApi(Resource):
 
         monitor.save_to_db()
 
-        return ResponseData([monitor_summary.dump(monitor)])
+        return ResponseData(monitor_summary.dump(monitor))

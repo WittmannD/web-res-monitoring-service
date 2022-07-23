@@ -2,3 +2,4 @@
 .idea
 client
 __pycache__
+venv

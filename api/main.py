@@ -1,9 +1,10 @@
 import os
 
-from flask import Flask, Blueprint
+from flask import Flask, Blueprint, jsonify
 from flask_cors import CORS
 from flask_restful import Api
 from webargs.flaskparser import parser, abort
+from werkzeug.exceptions import HTTPException
 
 from api.models.BaseModel import db
 from api.resources.LoginApi import LoginApi
@@ -11,6 +12,7 @@ from api.resources.SignupApi import SignupApi
 from api.resources.AuthCheckApi import AuthCheckApi
 from api.resources.MonitoringApi import MonitoringApi
 from api.resources.MonitorApi import MonitorApi
+import api.utils.constants as constants
 
 
 def init_db(app):
@@ -22,21 +24,23 @@ def init_db(app):
 
 
 def init_routes(api):
-    api.add_resource(LoginApi, '/auth/login')
-    api.add_resource(SignupApi, '/auth/signup')
-    api.add_resource(AuthCheckApi, '/auth/check')
-    api.add_resource(MonitoringApi, '/monitoring')
-    api.add_resource(MonitorApi, '/monitoring/<monitor_id>')
+    api.add_resource(LoginApi, constants.LOGIN_ROUTE)
+    api.add_resource(SignupApi, constants.SIGNUP_ROUTE)
+    api.add_resource(AuthCheckApi, constants.AUTH_CHECK_ROUTE)
+    api.add_resource(MonitoringApi, constants.MONITORING_ROUTE)
+    api.add_resource(MonitorApi, constants.SINGLE_MONITOR_ROUTE)
 
 
 @parser.error_handler
 def handle_request_parsing_error(err, req, schema, *, error_status_code, error_headers):
-    abort(error_status_code or 422, status='error', messages=err.messages.get('json'))
+    abort(error_status_code or 422, status='error', message=err.messages.get('json'))
 
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(os.environ.get('FLASK_APP_SETTINGS'))
+
+    init_db(app)
 
     api_blueprint = Blueprint('api', __name__)
 
@@ -47,7 +51,6 @@ def create_app():
 
     app.register_blueprint(api_blueprint, url_prefix='/api/v1')
 
-    init_db(app)
     return app
 
 

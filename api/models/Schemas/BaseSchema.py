@@ -10,15 +10,20 @@ class ValidatedSchema(Schema):
         schema_kwargs = schema_kwargs or {}
 
         def factory(request):
-            only = request.args.get('fields', None)
-            partial = request.method == 'PUT'
+            field = request.args.get('fields', None)
+            only = field.split(',') if field else None
+            partial = request.method == 'PATCH'
 
             return cls(
-                only=only, partial=partial, context={'request': request}, **schema_kwargs
+                only=only,
+                partial=partial,
+                context={'request': request},
+                **schema_kwargs
             )
 
         if args_type == 'use_kwargs':
             return use_kwargs(factory, **kwargs)
+
         return use_args(factory, **kwargs)
 
 

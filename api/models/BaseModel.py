@@ -32,10 +32,6 @@ class BaseModel(db.Model):
         return cls.query.order_by(cls.id.desc()).first()
 
     @classmethod
-    def find_enabled_item(cls, _id):
-        return cls.query.filter_by(id=_id, status='enabled').first()
-
-    @classmethod
     def find_by_first(cls, **kwargs):
         return cls.query.filter_by(**kwargs).first()
 

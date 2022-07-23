@@ -1,13 +1,14 @@
 from flask_restful import Resource
 
-from api.models.Schemas.UserSchema import UserSchema, user_summary
+from api.models.Schemas.LoginSchema import LoginSchema
+from api.models.Schemas.UserSchema import user_summary
 from api.models.UserModel import UserModel
 from api.utils.utils import ResponseError, ResponseData
 
 
 class LoginApi(Resource):
     @staticmethod
-    @UserSchema.validate_fields(location="json")
+    @LoginSchema.validate_fields(location="json")
     def post(args):
         user = UserModel.find_by_username(args.get('username'))
 

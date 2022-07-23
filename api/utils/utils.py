@@ -4,14 +4,14 @@ from functools import wraps
 from typing import List, Any, Optional
 
 import jwt
-from flask import make_response, jsonify, request, current_app
+from flask import make_response, jsonify, request, current_app, Response
 
 from api.models.UserModel import UserModel
 
 
 @dataclass
 class Response:
-    data: Any
+    content: Any
     status: str
 
 
@@ -24,7 +24,7 @@ class Error:
 def ResponseData(data: Any):
     return make_response(
         jsonify(Response(
-            data=data,
+            content=data,
             status='success',
         )), 200
     )
@@ -34,7 +34,7 @@ def ResponseDataCollection(data: List[Any], total: Optional[int] = None):
     total = total or len(data)
     return make_response(
         jsonify(Response(
-            data=dict(
+            content=dict(
                 items=data,
                 total=total
             ),
@@ -68,11 +68,6 @@ def decode_access_token(token):
     return jwt.decode(token, current_app.config.get('SECRET_KEY'), 'HS256')
 
 
-def check_token_expiration(token):
-    data = decode_access_token(token)
-    return data.get('exp') > datetime.datetime.utcnow()
-
-
 def token_required(f):
     @wraps(f)
     def decorator(*args, **kwargs):
@@ -89,10 +84,7 @@ def token_required(f):
 
                 return f(*args, current_user, **kwargs)
 
-        except (ValueError, jwt.DecodeError):
-            pass
-
-        finally:
+        except (ValueError, jwt.exceptions.DecodeError, jwt.exceptions.ExpiredSignatureError):
             return ResponseError('Valid access token is missing', 401)
 
     return decorator

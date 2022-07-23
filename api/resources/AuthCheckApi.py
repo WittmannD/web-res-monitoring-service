@@ -1,8 +1,8 @@
 from flask import request
 from flask_restful import Resource
-from jwt import DecodeError
+from jwt import DecodeError, ExpiredSignatureError
 
-from api.utils.utils import ResponseData, check_token_expiration
+from api.utils.utils import ResponseData, decode_access_token
 
 
 class AuthCheckApi(Resource):
@@ -14,11 +14,9 @@ class AuthCheckApi(Resource):
             if 'Authorization' in request.headers:
                 _, token = request.headers['Authorization'].split(' ')
 
-            if token and check_token_expiration(token):
-                return ResponseData([{'token': token, 'auth': True}])
+            if token:
+                decode_access_token(token)
+                return ResponseData({'access_token': token, 'auth': True})
 
-        except (ValueError, DecodeError):
-            pass
-
-        finally:
-            return ResponseData([{'token': '', 'auth': False}])
+        except (ValueError, DecodeError, ExpiredSignatureError):
+            return ResponseData({'access_token': '', 'auth': False})
