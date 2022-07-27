@@ -1,13 +1,14 @@
 import os
+from http import HTTPStatus
 
 from flask import Flask, Blueprint, jsonify
 from flask_cors import CORS
 from flask_restful import Api
 from webargs.flaskparser import parser, abort
-from werkzeug.exceptions import HTTPException
 
 from api.models.BaseModel import db
 from api.resources.LoginApi import LoginApi
+from api.resources.MonitorRequestsApi import MonitorRequestsApi
 from api.resources.SignupApi import SignupApi
 from api.resources.AuthCheckApi import AuthCheckApi
 from api.resources.MonitoringApi import MonitoringApi
@@ -28,12 +29,13 @@ def init_routes(api):
     api.add_resource(SignupApi, constants.SIGNUP_ROUTE)
     api.add_resource(AuthCheckApi, constants.AUTH_CHECK_ROUTE)
     api.add_resource(MonitoringApi, constants.MONITORING_ROUTE)
+    api.add_resource(MonitorRequestsApi, constants.MONITOR_REQUESTS_ROUTE)
     api.add_resource(MonitorApi, constants.SINGLE_MONITOR_ROUTE)
 
 
 @parser.error_handler
 def handle_request_parsing_error(err, req, schema, *, error_status_code, error_headers):
-    abort(error_status_code or 422, status='error', message=err.messages.get('json'))
+    abort(error_status_code or HTTPStatus.UNPROCESSABLE_ENTITY, status='error', message=err.messages.get('json'))
 
 
 def create_app():

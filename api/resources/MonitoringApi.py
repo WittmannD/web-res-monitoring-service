@@ -1,10 +1,10 @@
-from datetime import timedelta, datetime
+from http import HTTPStatus
 
 from flask_restful import Resource
 
 from api.models.MonitorModel import MonitorModel
 from api.models.Schemas.MonitorSchema import MonitorSchema, monitor_summary
-from api.models.Schemas.PaginationSchema import PaginationSchema, pagination_summary
+from api.models.Schemas.MonitoringSchema import MonitoringSchema, monitoring_summary
 from api.models.UserModel import UserModel
 from api.utils.utils import token_required, ResponseData
 
@@ -12,7 +12,7 @@ from api.utils.utils import token_required, ResponseData
 class MonitoringApi(Resource):
     @staticmethod
     @token_required
-    @PaginationSchema.validate_fields(location='query')
+    @MonitoringSchema.validate_fields(location='query')
     def get(current_user: UserModel, args):
         monitors_pagination = MonitorModel.find_and_paginated_order_by(
             page=args.get('page'),
@@ -21,7 +21,7 @@ class MonitoringApi(Resource):
             user_id=current_user.id
         )
 
-        return ResponseData(pagination_summary.dump(monitors_pagination))
+        return ResponseData(monitoring_summary.dump(monitors_pagination))
 
     @staticmethod
     @token_required
@@ -32,9 +32,10 @@ class MonitoringApi(Resource):
             method=args.get('method'),
             interval=args.get('interval'),
             user_id=current_user.id,
-            next_check_at=datetime.utcnow() + timedelta(minutes=args.get('interval'))
+            next_check_at=None,
+            status=None
         )
 
         monitor.save_to_db()
 
-        return ResponseData(monitor_summary.dump(monitor))
+        return ResponseData(monitor_summary.dump(monitor), status=HTTPStatus.CREATED)

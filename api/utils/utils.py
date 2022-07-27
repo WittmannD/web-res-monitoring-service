@@ -1,6 +1,8 @@
 import datetime
+import math
 from dataclasses import dataclass
 from functools import wraps
+from http import HTTPStatus
 from typing import List, Any, Optional
 
 import jwt
@@ -21,16 +23,16 @@ class Error:
     status: str
 
 
-def ResponseData(data: Any):
+def ResponseData(data: Any, status=HTTPStatus.OK):
     return make_response(
         jsonify(Response(
             content=data,
             status='success',
-        )), 200
+        )), status
     )
 
 
-def ResponseDataCollection(data: List[Any], total: Optional[int] = None):
+def ResponseDataCollection(data: List[Any], total: Optional[int] = None, status=HTTPStatus.OK):
     total = total or len(data)
     return make_response(
         jsonify(Response(
@@ -39,7 +41,7 @@ def ResponseDataCollection(data: List[Any], total: Optional[int] = None):
                 total=total
             ),
             status='success',
-        )), 200
+        )), status
     )
 
 
@@ -85,6 +87,19 @@ def token_required(f):
                 return f(*args, current_user, **kwargs)
 
         except (ValueError, jwt.exceptions.DecodeError, jwt.exceptions.ExpiredSignatureError):
-            return ResponseError('Valid access token is missing', 401)
+            return ResponseError('Valid access token is missing', HTTPStatus.UNAUTHORIZED)
 
     return decorator
+
+
+def ceil_round_to_base(n, base: int):
+    return base * math.ceil(n / base)
+
+
+def round_to_base(n, base: int):
+    return base * round(n / base)
+
+
+def round_time_to_minutes(dt: datetime, base_minutes: int) -> datetime:
+    return dt.replace(minute=0, second=0) + datetime.timedelta(minutes=round_to_base(dt.minute, base_minutes))
+

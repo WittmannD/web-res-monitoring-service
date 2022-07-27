@@ -26,10 +26,3 @@ class PaginationSchema(ValidatedSchema):
 
         return data
 
-    @post_dump()
-    def process_dump(self, data, **kwargs):
-        data['items'] = monitor_summary.dump(data.get('items', []), many=True)
-        return data
-
-
-pagination_summary = PaginationSchema()

@@ -20,4 +20,3 @@ class DevelopmentConfig(Config):
     DEVELOPMENT = True
     SECRET_KEY = 'development_secret_key'
     SQLALCHEMY_TRACK_MODIFICATIONS = True
-    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:3141@localhost:5432/monitoring'

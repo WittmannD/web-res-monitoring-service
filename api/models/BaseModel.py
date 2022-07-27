@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from sqlalchemy import event
 from flask_sqlalchemy import SQLAlchemy
 from slugify import slugify
 
@@ -43,10 +44,14 @@ class BaseModel(db.Model):
     def find_and_order_by(cls, order_by='id', **kwargs):
         return cls.query.filter_by(**kwargs).order_by(order_by).all()
 
-    def save_to_db(self):
-        if self.id is not None:
-            self.updated_at = datetime.utcnow()
+    @classmethod
+    def find_and_paginated_order_by(cls, page=1, per_page=10, order_by='created_at desc', **kwargs):
+        field, direction = order_by.split(' ')
+        field = getattr(cls, field, cls.id)
+        order_by = getattr(field, direction, field.desc)()
+        return cls.query.filter_by(**kwargs).order_by(order_by).paginate(page, per_page, error_out=False)
 
+    def save_to_db(self):
         db.session.add(self)
         db.session.commit()
 
@@ -63,3 +68,13 @@ class BaseModel(db.Model):
     @classmethod
     def date_to_string(cls, raw_date):
         return "{}".format(raw_date)
+
+
+@event.listens_for(BaseModel, 'before_insert', propagate=True)
+def before_insert(mapper, connecton, instance):
+    instance.created_at = datetime.utcnow()
+
+
+@event.listens_for(BaseModel, 'before_update', propagate=True)
+def before_update(mapper, connecton, instance):
+    instance.updated_at = datetime.utcnow()

@@ -1,5 +1,5 @@
 .env
 .idea
-client
+/client/
 __pycache__
 venv
