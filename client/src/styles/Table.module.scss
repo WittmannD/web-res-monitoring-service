@@ -1,0 +1,38 @@
+.table {
+  width: 100%;
+  vertical-align: top;
+  border-collapse: collapse;
+  border-style: hidden;
+  caption-side: top;
+
+  color: var(--bs-body-color);
+
+  & > :not(caption) > * > * {
+    padding: 0.5rem;
+  }
+
+  & > caption {
+    font-weight: 500;
+  }
+
+  & > thead {
+    font-size: 0.825rem;
+
+    & > tr > th {
+      font-weight: 600;
+    }
+  }
+
+  & > tbody {
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.125);
+    border-radius: 0.25rem;
+
+    & > tr:not(:first-child) {
+      border: 1px solid rgba(0, 0, 0, 0.125);
+    }
+  }
+
+  & > tbody:empty {
+    box-shadow: none;
+  }
+}

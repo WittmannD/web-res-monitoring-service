@@ -1,0 +1,32 @@
+.action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.25rem;
+
+  background-color: transparent;
+  padding: 0.25rem 0.8rem;
+  user-select: none;
+  width: 100%;
+  border: none;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--bs-body-color);
+
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+
+  &.danger:hover {
+    background-color: var(--bs-danger);
+    color: white;
+  }
+
+  &:hover {
+    background-color: #e9ecef;
+    color: var(--bs-body-color);
+  }
+
+  &:active {
+    background-color: #e1e4e7;
+    color: var(--bs-body-color);
+  }
+}

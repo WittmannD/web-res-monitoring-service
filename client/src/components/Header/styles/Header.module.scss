@@ -1,0 +1,70 @@
+@keyframes underline-in {
+  0% {
+    right: 100%;
+    left: 0;
+  }
+
+  100% {
+    right: 0;
+    left: 0;
+  }
+}
+
+@keyframes underline-out {
+  0% {
+    left: 0;
+    right: 0;
+  }
+
+  100% {
+    left: 100%;
+    right: 0;
+  }
+}
+
+.brand {
+  display: inline-block;
+  font-weight: 800;
+  position: relative;
+  text-decoration: none;
+  text-shadow: 0 0 var(--bs-gray);
+
+  color: var(--bs-body-color);
+
+  line-height: 1.5;
+  user-select: none;
+  cursor: pointer;
+
+  &:before {
+    content: 'monitoring app';
+    display: inline-block;
+    position: absolute;
+
+    color: transparent;
+    text-shadow: none;
+
+    white-space: nowrap;
+    overflow: clip;
+
+    text-decoration: underline;
+    text-decoration-color: var(--bs-red);
+    text-decoration-thickness: 0.15em;
+    text-underline-offset: auto;
+
+    right: 0;
+    width: 0;
+    direction: rtl;
+    transition: width .2s ease;
+  }
+
+  &:hover,
+  &:visited {
+    color: var(--bs-body-color);
+  }
+
+  &:hover:before {
+    right: auto;
+    direction: ltr;
+    width: 100%;
+  }
+}

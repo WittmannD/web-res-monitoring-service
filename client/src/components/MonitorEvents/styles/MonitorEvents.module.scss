@@ -1,0 +1,12 @@
+@import "../../../styles/Table.module";
+
+.monitorLinkCell {
+}
+
+.monitorLink {
+  color: var(--bs-gray);
+  font-family: var(--bs-font-monospace);
+  font-size: 0.875em;
+  line-height: 1;
+}
+

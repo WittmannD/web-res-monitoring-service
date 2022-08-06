@@ -1,5 +1,7 @@
 .env
+/client/.env
 .idea
-/client/
+/client/node_modules/
+/client/build/
 __pycache__
 venv

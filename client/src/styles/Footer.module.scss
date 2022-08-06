@@ -1,0 +1,15 @@
+.footer {
+  padding: 0.5rem;
+  background-color: rgba(var(--bs-light-rgb), 1);
+  color: var(--bs-gray-600);
+  font-size: 0.875em;
+
+  & a {
+    color: inherit;
+    text-decoration: underline;
+
+    &:hover {
+      color: inherit;
+    }
+  }
+}
