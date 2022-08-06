@@ -10,13 +10,14 @@ class Config(object):
 
 
 class ProductionConfig(Config):
-    DEBUG = False
     SECRET_KEY = os.environ.get('SECRET_KEY')
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
 class DevelopmentConfig(Config):
     ENV = "development"
+    FLASK_ENV = "development"
+    DEBUG = True
     DEVELOPMENT = True
+    SQLALCHEMY_ECHO = True
     SECRET_KEY = 'development_secret_key'
     SQLALCHEMY_TRACK_MODIFICATIONS = True

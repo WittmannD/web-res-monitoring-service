@@ -1,7 +1,8 @@
+import uuid
 from datetime import datetime
 
-from sqlalchemy import event
-from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import event, DDL
+from flask_sqlalchemy import SQLAlchemy, Pagination
 from slugify import slugify
 
 db = SQLAlchemy()
@@ -9,7 +10,6 @@ db = SQLAlchemy()
 
 class BaseModel(db.Model):
     __abstract__ = True
-
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -25,31 +25,49 @@ class BaseModel(db.Model):
         return cls.query.count()
 
     @classmethod
+    def count_by(cls, stmt):
+        return cls.query.filter(stmt).count()
+
+    @classmethod
     def find_by_id(cls, _id):
         return cls.query.get(_id)
 
     @classmethod
     def find_latest(cls):
-        return cls.query.order_by(cls.id.desc()).first()
+        return cls.query.order_by(cls.created_at.desc()).first()
 
     @classmethod
-    def find_by_first(cls, **kwargs):
-        return cls.query.filter_by(**kwargs).first()
+    def find_by_first(cls, stmt=True, **kwargs):
+        return cls.query.filter(stmt).filter_by(**kwargs).first()
 
     @classmethod
-    def find_by(cls, **kwargs):
-        return cls.query.filter_by(**kwargs).all()
+    def find_by(cls, stmt=True, **kwargs):
+        return cls.query.filter(stmt).filter_by(**kwargs).all()
 
     @classmethod
-    def find_and_order_by(cls, order_by='id', **kwargs):
-        return cls.query.filter_by(**kwargs).order_by(order_by).all()
+    def find_and_order_by(cls, stmt=True, order_by=None, **kwargs):
+        order_by = order_by or dict(created_at='desc')
+        ordering = [
+            getattr(getattr(cls, field, cls.created_at), direction, field.desc)()
+            for field, direction in order_by.items()
+        ]
+
+        return cls.query.filter(stmt).filter_by(**kwargs).order_by(*ordering).all()
 
     @classmethod
-    def find_and_paginated_order_by(cls, page=1, per_page=10, order_by='created_at desc', **kwargs):
-        field, direction = order_by.split(' ')
-        field = getattr(cls, field, cls.id)
-        order_by = getattr(field, direction, field.desc)()
-        return cls.query.filter_by(**kwargs).order_by(order_by).paginate(page, per_page, error_out=False)
+    def find_paginate_and_order_by(cls, page=1, per_page=10, order_by=None, stmt=True, **kwargs) -> Pagination:
+        if order_by is None:
+            order_by = ['created_at desc']
+
+        ordering = []
+        for parameter in order_by:
+            [field, direction] = parameter.split(' ')
+
+            field = getattr(cls, field, cls.created_at)
+            direction = getattr(field, direction, field.desc)
+            ordering.append(direction())
+
+        return cls.query.filter(stmt).filter_by(**kwargs).order_by(*ordering).paginate(page, per_page, error_out=False)
 
     def save_to_db(self):
         db.session.add(self)
@@ -71,10 +89,10 @@ class BaseModel(db.Model):
 
 
 @event.listens_for(BaseModel, 'before_insert', propagate=True)
-def before_insert(mapper, connecton, instance):
+def before_insert(mapper, connection, instance):
     instance.created_at = datetime.utcnow()
 
 
 @event.listens_for(BaseModel, 'before_update', propagate=True)
-def before_update(mapper, connecton, instance):
+def before_update(mapper, connection, instance):
     instance.updated_at = datetime.utcnow()

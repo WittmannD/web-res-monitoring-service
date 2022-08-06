@@ -1,28 +1,28 @@
-from marshmallow import fields, post_load, post_dump
+from marshmallow import fields, post_load, post_dump, Schema, ValidationError
 
 from api.models.MonitorModel import MonitorModel
 from api.models.Schemas.BaseSchema import ValidatedSchema
-from api.models.Schemas.MonitorSchema import monitor_summary
 
 
 class PaginationSchema(ValidatedSchema):
     page = fields.Integer(missing=1)
     per_page = fields.Integer(missing=10, load_only=True)
-    order_by = fields.String(missing='created_at desc', load_only=True)
+    sort = fields.List(fields.String, load_only=True)
 
     items = fields.List(fields.Raw, dump_only=True)
     pages = fields.Integer(dump_only=True)
     total = fields.Integer(dump_only=True)
 
-    @post_load()
-    def process_input_data(self, data, **kwargs):
+    @staticmethod
+    def validate_sort_parameters(data, child_model):
         try:
-            field, direction = data.get('order_by').split(' ')
-            assert field in MonitorModel.__dict__
-            assert direction in MonitorModel.__dict__[field].__dict__
+            sort = data.get('sort', [])
+            for parameter in sort:
+                [key, value] = parameter.split(' ')
+                if key not in child_model.fields.keys():
+                    raise AssertionError()
+                if value not in ['desc', 'asc']:
+                    raise AssertionError()
 
-        except (ValueError, AssertionError):
-            data['order_by'] = 'created_at desc'
-
-        return data
-
+        except (AttributeError, ValueError, ValidationError, AssertionError) as err:
+            raise ValidationError(message='Invalid sort parameters.', field_name='sort')

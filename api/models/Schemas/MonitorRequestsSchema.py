@@ -1,7 +1,4 @@
-from typing import Union
-from datetime import datetime
-
-from marshmallow import post_dump, fields
+from marshmallow import post_dump, fields, ValidationError, post_load
 from marshmallow_enum import EnumField
 
 from api.models.Schemas.BaseSchema import BaseSchema
@@ -10,12 +7,6 @@ from api.utils.constants import MonitorStatus
 
 
 class MonitorRequestSchema(BaseSchema):
-    timestamp: datetime
-    elapsed: Union[int, float]
-    status_code: MonitorStatus
-    response: str
-    monitor_id: int
-
     timestamp = fields.DateTime(nullable=False)
     elapsed = fields.Number(nullable=False)
     status_code = EnumField(MonitorStatus, default=MonitorStatus.UP, nullable=False)
@@ -27,6 +18,14 @@ monitor_request_summary = MonitorRequestSchema(exclude=['monitor_id'])
 
 
 class MonitorRequestsSchema(PaginationSchema):
+    datetime_start = fields.DateTime(load_only=True)
+    datetime_end = fields.DateTime(load_only=True)
+
+    @post_load()
+    def process_input_data(self, data, **kwargs):
+        self.validate_sort_parameters(data, monitor_request_summary)
+        return data
+
     @post_dump()
     def process_dump(self, data, **kwargs):
         data['items'] = monitor_request_summary.dump(data.get('items', []), many=True)

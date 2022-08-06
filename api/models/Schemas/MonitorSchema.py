@@ -1,4 +1,4 @@
-from marshmallow import fields
+from marshmallow import fields, post_load
 from marshmallow_enum import EnumField
 
 from .BaseSchema import BaseSchema
@@ -9,6 +9,7 @@ class MonitorSchema(BaseSchema):
     url = fields.URL(required=True)
     method = EnumField(HttpMethod, default=HttpMethod.GET)
     interval = fields.Integer(default=5)
+    running = fields.Boolean(missing=True)
 
     status = EnumField(MonitorStatus, dump_only=True, default=MonitorStatus.UP)
     next_check_at = fields.DateTime(dump_only=True)

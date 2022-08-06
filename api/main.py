@@ -1,12 +1,14 @@
 import os
 from http import HTTPStatus
 
-from flask import Flask, Blueprint, jsonify
+from dotenv import load_dotenv
+from flask import Flask, Blueprint
 from flask_cors import CORS
 from flask_restful import Api
 from webargs.flaskparser import parser, abort
 
 from api.models.BaseModel import db
+from api.resources.EventsApi import EventsApi
 from api.resources.LoginApi import LoginApi
 from api.resources.MonitorRequestsApi import MonitorRequestsApi
 from api.resources.SignupApi import SignupApi
@@ -31,17 +33,20 @@ def init_routes(api):
     api.add_resource(MonitoringApi, constants.MONITORING_ROUTE)
     api.add_resource(MonitorRequestsApi, constants.MONITOR_REQUESTS_ROUTE)
     api.add_resource(MonitorApi, constants.SINGLE_MONITOR_ROUTE)
+    api.add_resource(EventsApi, constants.EVENTS_ROUTE)
 
 
 @parser.error_handler
 def handle_request_parsing_error(err, req, schema, *, error_status_code, error_headers):
-    abort(error_status_code or HTTPStatus.UNPROCESSABLE_ENTITY, status='error', message=err.messages.get('json'))
+    messages = {**err.messages.get('json', {}), **err.messages.get('query', {}), **err.messages.get('form', {})}
+    abort(error_status_code or HTTPStatus.UNPROCESSABLE_ENTITY, status='validation_error', message=messages)
 
 
 def create_app():
+    load_dotenv()
+
     app = Flask(__name__)
     app.config.from_object(os.environ.get('FLASK_APP_SETTINGS'))
-
     init_db(app)
 
     api_blueprint = Blueprint('api', __name__)

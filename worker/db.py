@@ -9,7 +9,6 @@ from sqlalchemy.ext.automap import automap_base
 
 from api.models import MonitorModel, MonitorRequestsModel
 
-MAX_REQUESTS = 50
 load_dotenv()
 
 
@@ -19,10 +18,7 @@ class DB:
     base.prepare(autoload_with=engine, reflect=True)
     session = orm.Session(bind=engine)
 
-    # MonitorModel = base.classes.monitors
     MonitorQuery = session.query(MonitorModel)
-
-    # MonitorRequestsModel = base.classes.monitor_requests
     MonitorRequestsQuery = session.query(MonitorRequestsModel)
 
     @classmethod
@@ -36,7 +32,8 @@ class DB:
         query = cls.MonitorQuery.filter(
             and_(
                 MonitorModel.next_check_at >= from_time,
-                MonitorModel.next_check_at <= to_time
+                MonitorModel.next_check_at <= to_time,
+                MonitorModel.running
             )
         )
 

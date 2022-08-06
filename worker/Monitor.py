@@ -5,6 +5,7 @@ from http import HTTPStatus
 import aiohttp
 
 from api.models import MonitorRequestsModel
+from api.models.EventsModel import EventsModel
 from api.utils.constants import MonitorStatus
 from worker.HttpClient import HttpClient
 from worker.db import DB
@@ -23,42 +24,56 @@ class Monitor:
         self.request_data = dict(
             timestamp=self.request_timestamp,
             elapsed=(datetime.utcnow() - self.request_timestamp).total_seconds(),
-            status_code=HTTPStatus(response.status).name,
+            status_code=HTTPStatus(response.status),
             response=await response.text(),
             monitor_id=self.model.id
         )
         response.raise_for_status()
 
     async def check(self):
-        monitor_status = MonitorStatus.DOWN.name
+        monitor_status = self.model.status
+        event_type = None
 
         try:
             self.request_timestamp = datetime.utcnow()
             await HttpClient.request(
-                self.model.method.name.lower(),
-                self.model.url,
-                None,
-                self.set_request_data
+                method=self.model.method.name.lower(),
+                url=self.model.url,
+                payload=None,
+                resolve=self.set_request_data
             )
 
         except aiohttp.ClientResponseError as err:
-            pass
+            if monitor_status == MonitorStatus.UP:
+                event_type = MonitorStatus.DOWN
+
+            monitor_status = MonitorStatus.DOWN
 
         except Exception as err:
+            monitor_status = MonitorStatus.DOWN
             print(err)
             print(traceback.format_exc())
             raise err
 
         else:
-            monitor_status = MonitorStatus.UP.name
+            if monitor_status == MonitorStatus.DOWN:
+                event_type = MonitorStatus.UP
+
+            monitor_status = MonitorStatus.UP
 
         finally:
+            if event_type is not None:
+                event = EventsModel(
+                    datetime=self.request_timestamp,
+                    event=event_type,
+                    reason=self.request_data.get('status_code'),
+                    user_id=self.model.user_id,
+                    monitor_id=self.model.id
+                )
+                DB.session.add(event)
+
             monitor_request = MonitorRequestsModel(**self.request_data)
             self.model.status = monitor_status
-            self.model.next_check_at = round_time_to_minutes(
-                self.model.next_check_at + timedelta(minutes=float(self.model.interval)),
-                base_minutes=CHECK_EVERY_MINUTES
-            )
 
             DB.session.add(monitor_request)
             DB.session.add(self.model)

@@ -30,6 +30,6 @@ class ValidatedSchema(Schema):
 class BaseSchema(ValidatedSchema):
     __abstract__ = True
 
-    id = fields.Int(dump_only=True)
+    id = fields.Integer(dump_only=True)
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)
