@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import event, DDL
+from sqlalchemy import event, DDL, inspect
 from flask_sqlalchemy import SQLAlchemy, Pagination
 from slugify import slugify
 
@@ -76,6 +76,9 @@ class BaseModel(db.Model):
     def delete_from_db(self):
         db.session.delete(self)
         db.session.commit()
+
+    def as_dict(self):
+        return {c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs}
 
     """ Utility functions """
 

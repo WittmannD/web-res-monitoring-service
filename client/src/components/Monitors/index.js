@@ -116,7 +116,7 @@ function Monitors() {
       <Alert variant="secondary" closable={false} appear={false}>
         <p>
           This application created for simple development purposes. For more
-          features, try to use a more{' '}
+          features, try to use the more{' '}
           <a
             href="https://uptimerobot.com/?rid=57a2299170af03"
             target="_blank"

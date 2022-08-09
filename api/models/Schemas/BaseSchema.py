@@ -1,6 +1,8 @@
 from marshmallow import Schema, fields
 from webargs.flaskparser import use_args, use_kwargs
 
+from api.models.BaseModel import BaseModel
+
 
 class ValidatedSchema(Schema):
     __abstract__ = True

@@ -1,19 +1,20 @@
+from http import HTTPStatus
+
 from flask_restful import Resource
 
 from api.models.Schemas.LoginSchema import LoginSchema
-from api.models.Schemas.UserSchema import user_summary
+from api.models.Schemas.TokensSchema import access_token_summary
 from api.models.UserModel import UserModel
-from api.utils.utils import ResponseError, ResponseData
+from api.utils.utils import ResponseData, ApiError
 
 
 class LoginApi(Resource):
     @staticmethod
     @LoginSchema.validate_fields(location="json")
     def post(args):
-        user = UserModel.find_by_username(args.get('username'))
+        user = UserModel.find_by_email(args.get('email'))
 
-        if user and UserModel.verify_hash(user.password, args.get('password')):
-            return ResponseData({'access_token': user_summary.dump(user)})
+        if user is None or not UserModel.verify_hash(user.password, args.get('password')):
+            raise ApiError('Invalid email or password', status=HTTPStatus.UNAUTHORIZED)
 
-        else:
-            return ResponseError('Incorrect username or password', 401)
+        return ResponseData(dict(access_token=access_token_summary.dump(user)))

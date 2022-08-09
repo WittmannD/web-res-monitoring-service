@@ -1,27 +1,29 @@
 import os
-from http import HTTPStatus
 
 from dotenv import load_dotenv
-from flask import Flask, Blueprint
+from flask import Flask, Blueprint, jsonify, make_response
 from flask_cors import CORS
 from flask_restful import Api
-from webargs.flaskparser import parser, abort
 
 from api.models.BaseModel import db
+from api.resources.EmailVerificationApi import EmailVerificationApi
+from api.resources.SendVerificationApi import SendVerificationApi
 from api.resources.EventsApi import EventsApi
 from api.resources.LoginApi import LoginApi
 from api.resources.MonitorRequestsApi import MonitorRequestsApi
 from api.resources.SignupApi import SignupApi
-from api.resources.AuthCheckApi import AuthCheckApi
+from api.resources.UserApi import UserApi
 from api.resources.MonitoringApi import MonitoringApi
 from api.resources.MonitorApi import MonitorApi
 import api.utils.constants as constants
+from api.utils.utils import handle_error
 
 
 def init_db(app):
     db.init_app(app)
 
     with app.app_context():
+        db.drop_all()
         db.create_all()
         db.session.commit()
 
@@ -29,23 +31,24 @@ def init_db(app):
 def init_routes(api):
     api.add_resource(LoginApi, constants.LOGIN_ROUTE)
     api.add_resource(SignupApi, constants.SIGNUP_ROUTE)
-    api.add_resource(AuthCheckApi, constants.AUTH_CHECK_ROUTE)
+    api.add_resource(SendVerificationApi, constants.SEND_EMAIL_ROUTE)
+    api.add_resource(EmailVerificationApi, constants.VERIFICATION_ROUTE)
+
+    api.add_resource(UserApi, constants.USER_ROUTE)
+
     api.add_resource(MonitoringApi, constants.MONITORING_ROUTE)
     api.add_resource(MonitorRequestsApi, constants.MONITOR_REQUESTS_ROUTE)
     api.add_resource(MonitorApi, constants.SINGLE_MONITOR_ROUTE)
     api.add_resource(EventsApi, constants.EVENTS_ROUTE)
 
 
-@parser.error_handler
-def handle_request_parsing_error(err, req, schema, *, error_status_code, error_headers):
-    messages = {**err.messages.get('json', {}), **err.messages.get('query', {}), **err.messages.get('form', {})}
-    abort(error_status_code or HTTPStatus.UNPROCESSABLE_ENTITY, status='validation_error', message=messages)
-
-
 def create_app():
     load_dotenv()
 
     app = Flask(__name__)
+
+    app.register_error_handler(Exception, handle_error)
+
     app.config.from_object(os.environ.get('FLASK_APP_SETTINGS'))
     init_db(app)
 
@@ -63,4 +66,4 @@ def create_app():
 
 if __name__ == '__main__':
     flask_app = create_app()
-    flask_app.run()
+    flask_app.run(port=flask_app.config.get('PORT'))

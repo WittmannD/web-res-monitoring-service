@@ -1,19 +1,14 @@
-from marshmallow import fields, validate, post_dump
+from marshmallow import fields, validate, pre_dump
 
 from .BaseSchema import BaseSchema
-from ...utils.utils import create_access_token
 
 
 class UserSchema(BaseSchema):
-    username = fields.String(
+    email = fields.Email(
         required=True,
-        error_messages={'required': 'This field is required'},
-        validate=[validate.Length(min=4, max=24), validate.Regexp(regex=r'^[a-zA-Z0-9_.-]+$')],
+        error_messages={'required': 'This field is required'}
     )
-
-    @post_dump()
-    def create_access_token(self, data, **kwargs):
-        return create_access_token(data)
+    email_verified = fields.Boolean(default=False)
 
 
 user_summary = UserSchema()

@@ -1,38 +1,42 @@
 import jwtDecode from 'jwt-decode';
 import { $authHost, $host } from './index';
 
-export const signup = async (username, password, passwordConfirmation) => {
+export const signup = async (email, password, password_confirmation) => {
   const { data } = await $host.post('auth/signup', {
-    username,
+    email,
     password,
-    password_confirmation: passwordConfirmation,
+    password_confirmation,
   });
 
   if (data) {
     const token = data.content.access_token;
     localStorage.setItem('accessToken', token);
-    return jwtDecode(token);
   }
 
   return null;
 };
 
-export const login = async (username, password) => {
-  const { data } = await $host.post('auth/login', { username, password });
+export const login = async (email, password) => {
+  const { data } = await $host.post('auth/login', { email, password });
 
   const token = data.content.access_token;
   localStorage.setItem('accessToken', token);
   return jwtDecode(token);
 };
 
-export const check = async () => {
-  const { data } = await $authHost.get('auth/check');
+export const sendVerificationEmail = async () => {
+  const { data } = await $authHost.post('auth/send-verification-email');
+  return data;
+};
 
-  if (data.content.auth) {
-    return jwtDecode(data.content.access_token);
-  }
+export const verifyEmail = async (token) => {
+  const { data } = await $authHost.post(`auth/verify-email?token=${token}`);
+  return data;
+};
 
-  return null;
+export const getUser = async () => {
+  const { data } = await $authHost.get('user');
+  return data;
 };
 
 export const logout = async () => {

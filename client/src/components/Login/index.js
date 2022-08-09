@@ -7,12 +7,10 @@ import { useForm, Controller } from 'react-hook-form';
 import { login } from '../../http/api';
 import { useStore } from '../../Store/StoreProvider';
 
-import './Login.css';
-
 export default function Login() {
-  const { control, handleSubmit } = useForm({
+  const { control, handleSubmit, setError } = useForm({
     defaultValues: {
-      username: '',
+      email: '',
       password: '',
     },
   });
@@ -20,31 +18,53 @@ export default function Login() {
   const navigate = useNavigate();
 
   const onSubmit = async (data) => {
-    const { username, password } = data;
-    login(username, password)
+    const { email, password } = data;
+    login(email, password)
       .then((userData) => {
         user.setUser(userData);
         user.setIsAuth(true);
-        navigate('/monitoring', { replace: true });
+        navigate('/dashboard', { replace: true });
       })
       .catch((error) => {
-        console.log(error.response);
+        const { message, messages } = error.response.data;
+
+        if (message) {
+          setError('email', { message });
+        }
+
+        if (messages) {
+          const { json } = messages;
+          Object.entries(json).forEach(([key, values]) => {
+            const messageString = values.join('; ');
+            setError(key, { message: messageString });
+          });
+        }
       });
   };
 
   return (
-    <div className="Login">
+    <div className="">
       <Form onSubmit={handleSubmit(onSubmit)}>
         <Form.Group size="lg" className="mb-3" controlId="email">
-          <Form.Label>Username</Form.Label>
+          <Form.Label>Email</Form.Label>
           <Controller
-            name="username"
+            name="email"
             control={control}
             rules={{
               required: true,
             }}
-            render={({ field }) => (
-              <Form.Control autoFocus type="text" {...field} />
+            render={({ field, fieldState: { error } }) => (
+              <>
+                <Form.Control
+                  autoFocus
+                  type="email"
+                  {...field}
+                  isInvalid={!!error}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {error && error.message}
+                </Form.Control.Feedback>
+              </>
             )}
           />
         </Form.Group>
@@ -56,14 +76,21 @@ export default function Login() {
             rules={{
               required: true,
             }}
-            render={({ field }) => <Form.Control type="password" {...field} />}
+            render={({ field, fieldState: { error } }) => (
+              <>
+                <Form.Control type="password" {...field} isInvalid={!!error} />
+                <Form.Control.Feedback type="invalid">
+                  {error && error.message}
+                </Form.Control.Feedback>
+              </>
+            )}
           />
         </Form.Group>
         <ButtonGroup className="d-flex mb-3">
           <Button type="submit">Login</Button>
         </ButtonGroup>
         <Form.Text>
-          <Link to="/signup" replace>
+          <Link to="/auth/signup" replace>
             I don&apos;t have the account yet.
           </Link>
         </Form.Text>

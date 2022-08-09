@@ -9,17 +9,19 @@ from .BaseModel import BaseModel, db
 class UserModel(BaseModel):
     __tablename__ = 'users'
 
-    username: str
+    email: str
+    email_verified: bool
     password: str
 
-    username = db.Column(db.String, nullable=False, unique=True)
+    email = db.Column(db.String, nullable=False, unique=True)
+    email_verified = db.Column(db.Boolean, nullable=False, default=False)
     password = db.Column(db.String, nullable=False)
 
     """ Database operations """
 
     @classmethod
-    def find_by_username(cls, _username):
-        return cls.query.filter_by(username=_username).first()
+    def find_by_email(cls, _email):
+        return cls.find_by_first(email=_email)
 
     """ Utility functions """
 

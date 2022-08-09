@@ -4,7 +4,7 @@ from api.models.Schemas.BaseSchema import ValidatedSchema
 
 
 class LoginSchema(ValidatedSchema):
-    username = fields.String(
+    email = fields.Email(
         required=True,
     )
 

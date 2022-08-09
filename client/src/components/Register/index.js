@@ -5,47 +5,63 @@ import { ButtonGroup } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import { Controller, useForm } from 'react-hook-form';
 import { signup } from '../../http/api';
-import { useStore } from '../../Store/StoreProvider';
-
-import './Register.css';
 
 export default function Register() {
-  const { control, handleSubmit } = useForm({
+  const { control, handleSubmit, setError } = useForm({
     defaultValues: {
-      username: '',
+      email: '',
       password: '',
-      passwordConfirmation: '',
+      password_confirmation: '',
     },
   });
-  const { user } = useStore();
   const navigate = useNavigate();
 
   const onSubmit = async (data) => {
-    const { username, password, passwordConfirmation } = data;
-    signup(username, password, passwordConfirmation)
-      .then((userData) => {
-        user.setUser(userData);
-        user.setIsAuth(true);
-        navigate('/monitoring', { replace: true });
+    const { email, password, password_confirmation } = data;
+    signup(email, password, password_confirmation)
+      .then(() => {
+        navigate('/auth/verification', { replace: true });
       })
       .catch((error) => {
-        console.log(error.response);
+        const { message, messages } = error.response.data;
+
+        if (message) {
+          setError('email', { message });
+        }
+
+        if (messages) {
+          const { json } = messages;
+          Object.entries(json).forEach(([key, values]) => {
+            const messageString = values.join('; ');
+            setError(key, { message: messageString });
+          });
+        }
       });
   };
 
   return (
-    <div className="Signup">
+    <div className="">
       <Form onSubmit={handleSubmit(onSubmit)}>
         <Form.Group size="lg" className="mb-3" controlId="email">
-          <Form.Label>Username</Form.Label>
+          <Form.Label>Email</Form.Label>
           <Controller
-            name="username"
+            name="email"
             control={control}
             rules={{
               required: true,
             }}
-            render={({ field }) => (
-              <Form.Control autoFocus type="text" {...field} />
+            render={({ field, fieldState: { error } }) => (
+              <>
+                <Form.Control
+                  autoFocus
+                  type="email"
+                  {...field}
+                  isInvalid={!!error}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {error && error.message}
+                </Form.Control.Feedback>
+              </>
             )}
           />
         </Form.Group>
@@ -57,25 +73,39 @@ export default function Register() {
             rules={{
               required: true,
             }}
-            render={({ field }) => <Form.Control type="password" {...field} />}
+            render={({ field, fieldState: { error } }) => (
+              <>
+                <Form.Control type="password" {...field} isInvalid={!!error} />
+                <Form.Control.Feedback type="invalid">
+                  {error && error.message}
+                </Form.Control.Feedback>
+              </>
+            )}
           />
         </Form.Group>
         <Form.Group size="lg" className="mb-3" controlId="passwordConfirmation">
           <Form.Label>Password confirmation</Form.Label>
           <Controller
-            name="passwordConfirmation"
+            name="password_confirmation"
             control={control}
             rules={{
               required: true,
             }}
-            render={({ field }) => <Form.Control type="password" {...field} />}
+            render={({ field, fieldState: { error } }) => (
+              <>
+                <Form.Control type="password" {...field} isInvalid={!!error} />
+                <Form.Control.Feedback type="invalid">
+                  {error && error.message}
+                </Form.Control.Feedback>
+              </>
+            )}
           />
         </Form.Group>
         <ButtonGroup className="d-flex mb-3">
           <Button type="submit">Sign Up</Button>
         </ButtonGroup>
         <Form.Text>
-          <Link to="/login">I already have an account. Let me log in</Link>
+          <Link to="/auth/login">I already have an account. Let me log in</Link>
         </Form.Text>
       </Form>
     </div>

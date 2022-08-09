@@ -25,4 +25,4 @@ class PaginationSchema(ValidatedSchema):
                     raise AssertionError()
 
         except (AttributeError, ValueError, ValidationError, AssertionError) as err:
-            raise ValidationError(message='Invalid sort parameters.', field_name='sort')
+            raise ValidationError('Invalid sort parameters.', 'sort')

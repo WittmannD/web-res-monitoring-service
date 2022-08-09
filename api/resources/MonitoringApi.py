@@ -7,12 +7,13 @@ from api.models.MonitorModel import MonitorModel
 from api.models.Schemas.MonitorSchema import MonitorSchema, monitor_summary
 from api.models.Schemas.MonitoringSchema import MonitoringSchema, monitoring_summary
 from api.models.UserModel import UserModel
-from api.utils.utils import token_required, ResponseData, ResponseError
+from api.utils.utils import token_required, ResponseData, ApiError, verified_email_required
 
 
 class MonitoringApi(Resource):
     @staticmethod
     @token_required
+    @verified_email_required
     @MonitoringSchema.validate_fields(location='query')
     def get(current_user: UserModel, args):
         monitors_pagination = MonitorModel.find_paginate_and_order_by(
@@ -26,6 +27,7 @@ class MonitoringApi(Resource):
 
     @staticmethod
     @token_required
+    @verified_email_required
     @MonitorSchema.validate_fields(location='json')
     def post(current_user: UserModel, args):
         running_monitors = MonitorModel.count_by(and_(
@@ -34,7 +36,7 @@ class MonitoringApi(Resource):
         ))
 
         if running_monitors >= 3:
-            return ResponseError('Active monitor limit exceeded', HTTPStatus.FORBIDDEN)
+            raise ApiError('Active monitor limit exceeded', status=HTTPStatus.FORBIDDEN)
 
         monitor = MonitorModel(
             url=args.get('url'),

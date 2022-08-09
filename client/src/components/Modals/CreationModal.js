@@ -1,16 +1,19 @@
-import React from 'react';
-import { Col, FloatingLabel, Form, Row } from 'react-bootstrap';
-import moment from 'moment';
+import React, { useState } from 'react';
+import { Col, FloatingLabel, Form, Row, Spinner } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { postMonitor } from '../../http/api';
 import { useStore } from '../../Store/StoreProvider';
+import MonitorRange from '../Forms/MonitorRange';
+import MonitorUrlField from '../Forms/MonitorUrlField';
+import MonitorMethodField from '../Forms/MonitorMethodField';
 
 const MONITOR_FORM_MODAL_WINDOW = 'MonitorFormModalWindow';
 
 export function CreationModal() {
   const { monitoring, modals } = useStore();
-  const { control, handleSubmit } = useForm({
+  const [isLoading, setIsLoading] = useState(false);
+  const { control, handleSubmit, setError } = useForm({
     defaultValues: {
       url: '',
       method: 'GET',
@@ -19,15 +22,28 @@ export function CreationModal() {
   });
 
   const onSubmit = (monitorData) => {
+    setIsLoading(true);
     postMonitor(monitorData)
       .then((data) => {
-        console.log(data);
         monitoring.addMonitor(data.content);
         modals.hideModal(MONITOR_FORM_MODAL_WINDOW);
       })
       .catch((error) => {
-        console.log(error.response);
-      });
+        const { message, messages } = error.response.data;
+
+        if (message) {
+          setError('url', { message });
+        }
+
+        if (messages) {
+          const { json } = messages;
+          Object.entries(json).forEach(([key, values]) => {
+            const messageString = values.join('; ');
+            setError(key, { message: messageString });
+          });
+        }
+      })
+      .finally(() => setIsLoading(false));
   };
 
   return (
@@ -35,65 +51,30 @@ export function CreationModal() {
       <Row className="mb-3 g-3">
         <Col sm={4}>
           <FloatingLabel controlId="method" label="Method">
-            <Controller
-              name="method"
-              control={control}
-              rules={{
-                required: true,
-              }}
-              render={({ field }) => (
-                <Form.Select aria-label="HTTP method select" {...field}>
-                  <option value="GET">GET</option>
-                  <option value="POST">POST</option>
-                  <option value="OPTIONS">OPTIONS</option>
-                </Form.Select>
-              )}
-            />
+            <MonitorMethodField control={control} />
           </FloatingLabel>
         </Col>
         <Col sm={8}>
           <FloatingLabel controlId="url" label="URL">
-            <Controller
-              name="url"
-              control={control}
-              rules={{
-                required: true,
-              }}
-              render={({ field }) => (
-                <Form.Control
-                  type="text"
-                  placeholder="https://example.com/get"
-                  {...field}
-                />
-              )}
-            />
+            <MonitorUrlField control={control} />
           </FloatingLabel>
         </Col>
       </Row>
       <Form.Group className="mb-3" controlId="interval">
-        <Controller
-          name="interval"
-          control={control}
-          rules={{
-            required: true,
-          }}
-          render={({ field }) => {
-            const interval = moment
-              .duration(field.value, 'minutes')
-              .humanize(false, { m: 60 * 3, h: 24 });
-            const step = field.value >= 60 * 3 ? 60 : 5;
-
-            return (
-              <>
-                <Form.Label>Monitoring interval (every {interval})</Form.Label>
-                <Form.Range {...field} min={5} max={60 * 24} step={step} />
-              </>
-            );
-          }}
-        />
+        <MonitorRange control={control} />
       </Form.Group>
-      <Button variant="primary" type="submit">
-        Create
+      <Button variant="primary" type="submit" disabled={isLoading}>
+        {isLoading ? (
+          <Spinner
+            size="sm"
+            as="span"
+            role="status"
+            animation="border"
+            aria-hidden="true"
+          />
+        ) : (
+          <span>Save</span>
+        )}
       </Button>
     </Form>
   );

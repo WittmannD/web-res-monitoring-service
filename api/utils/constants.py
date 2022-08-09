@@ -4,9 +4,13 @@ MONITORING_ROUTE = '/monitoring'
 SINGLE_MONITOR_ROUTE = '/monitoring/<int:monitor_id>'
 MONITOR_REQUESTS_ROUTE = '/monitoring/<int:monitor_id>/requests'
 EVENTS_ROUTE = '/monitoring/events'
+
 LOGIN_ROUTE = '/auth/login'
 SIGNUP_ROUTE = '/auth/signup'
-AUTH_CHECK_ROUTE = '/auth/check'
+SEND_EMAIL_ROUTE = '/auth/send-verification-email'
+VERIFICATION_ROUTE = '/auth/verify-email'
+
+USER_ROUTE = '/user'
 
 
 @unique

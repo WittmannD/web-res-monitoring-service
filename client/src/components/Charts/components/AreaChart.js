@@ -34,12 +34,22 @@ export const getOptions = ({ labels }) => ({
   responsive: true,
   plugins: {
     legend: {
-      position: 'top',
+      display: true,
+      align: 'end',
     },
     title: {
       display: true,
+      position: 'bottom',
       text: 'Response time for last 24 hours',
     },
+    tooltip: {
+      enabled: true,
+    },
+  },
+  interaction: {
+    intersect: false,
+    mode: 'nearest',
+    axis: 'x',
   },
   scales: {
     x: {
@@ -56,6 +66,9 @@ export const getOptions = ({ labels }) => ({
     },
     y: {
       offset: false,
+      ticks: {
+        callback: (value, index, ticks) => `${value.toFixed(1)} ms`,
+      },
     },
   },
 });
@@ -98,8 +111,9 @@ export default function AreaChart() {
         {
           data,
           fill: true,
+          tension: 0.2,
           label: 'Response time',
-          borderColor: 'rgb(53, 162, 235)',
+          borderColor: 'var(--bs-primary)',
           backgroundColor: 'rgba(53, 162, 235, 0.5)',
         },
       ],

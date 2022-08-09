@@ -1,15 +1,15 @@
 import datetime
 import math
-import traceback
 from dataclasses import dataclass
 from functools import wraps
 from http import HTTPStatus
-from typing import List, Any, Optional
+from typing import List, Any, Optional, Dict, Union
 
 import jwt
 from flask import make_response, jsonify, request, current_app, Response
-from flask_sqlalchemy import Model
+from marshmallow import ValidationError
 from sqlalchemy import select, func, delete
+from werkzeug.exceptions import UnprocessableEntity, HTTPException
 
 from api.models.UserModel import UserModel
 
@@ -20,10 +20,17 @@ class Response:
     status: str
 
 
-@dataclass
-class Error:
-    message: str
-    status: str
+class ApiError(Exception):
+    def __init__(self, message: str, messages: Optional[Dict[str, str]] = None,
+                 status: Union[HTTPStatus, int] = HTTPStatus.INTERNAL_SERVER_ERROR):
+        self.status = status
+        self.message = message
+
+        if messages is not None:
+            self.messages = messages
+
+    def to_dict(self):
+        return self.__dict__
 
 
 def ResponseData(data: Any, status=HTTPStatus.OK):
@@ -48,25 +55,26 @@ def ResponseDataCollection(data: List[Any], total: Optional[int] = None, status=
     )
 
 
-def ResponseError(message: str, err_code: int):
-    return make_response(
-        jsonify(Error(
-            message=message,
-            status='error'
-        )), err_code
-    )
+def handle_error(error):
+    if isinstance(error, UnprocessableEntity):
+        return make_response(
+            dict(
+                status='error',
+                messages=error.data.get('messages')
+            ),
+            error.code
+        )
 
+    if isinstance(error, ApiError):
+        return make_response(
+            dict(
+                status='error',
+                message=error.message
+            ),
+            error.status
+        )
 
-def create_access_token(user_data):
-    return jwt.encode(
-        {
-            'id': user_data['id'],
-            'username': user_data['username'],
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=360)
-        },
-        key=current_app.config['SECRET_KEY'],
-        algorithm='HS256'
-    )
+    return error
 
 
 def decode_access_token(token):
@@ -86,13 +94,25 @@ def token_required(f):
             if token:
                 data = decode_access_token(token)
                 current_user = UserModel.find_by_id(data.get('id'))
-                if current_user is None:
-                    raise ValueError()
+
+                if current_user is None or data.get('token_type') != 'ACCESS_TOKEN':
+                    raise AssertionError()
 
                 return f(*args, current_user, **kwargs)
 
-        except (ValueError, jwt.exceptions.DecodeError, jwt.exceptions.ExpiredSignatureError) as err:
-            return ResponseError('Valid access token is missing', HTTPStatus.UNAUTHORIZED)
+        except (ValueError, AssertionError, jwt.exceptions.DecodeError, jwt.exceptions.ExpiredSignatureError) as err:
+            raise ApiError('Valid access token is missing', status=HTTPStatus.UNAUTHORIZED)
+
+    return decorator
+
+
+def verified_email_required(f):
+    @wraps(f)
+    def decorator(current_user: UserModel, *args, **kwargs):
+        if not current_user.email_verified:
+            raise ApiError('Your account has not been activated. Verify your email address first')
+
+        return f(*args, current_user, **kwargs)
 
     return decorator
 
@@ -125,8 +145,8 @@ def remove_overlimit(limit: int, mapper, connection, target, filter_by: str):
             .where(
                 mapper.c.id.in_(
                     select(mapper.c.id)
-                        .where(mapper.c[filter_by] == target.__dict__.get(filter_by))
-                        .order_by(mapper.c.created_at.asc()).limit(count - limit + 1)
+                    .where(mapper.c[filter_by] == target.__dict__.get(filter_by))
+                    .order_by(mapper.c.created_at.asc()).limit(count - limit + 1)
                 )
             )
         )

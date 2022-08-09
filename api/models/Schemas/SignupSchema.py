@@ -6,10 +6,9 @@ from api.models.Schemas.BaseSchema import ValidatedSchema
 
 
 class SignupSchema(ValidatedSchema):
-    username = fields.String(
+    email = fields.Email(
         required=True,
-        error_messages={'required': 'This field is required'},
-        validate=[validate.Length(min=4, max=24), validate.Regexp(regex=r'^[a-zA-Z0-9_.-]+$')],
+        error_messages={'required': 'This field is required'}
     )
 
     password = fields.Str(
