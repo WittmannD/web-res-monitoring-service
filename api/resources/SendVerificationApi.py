@@ -1,5 +1,6 @@
 from http import HTTPStatus
 
+from flask import current_app
 from flask_restful import Resource
 
 from api.models.Schemas.TokensSchema import verification_token_summary
@@ -23,7 +24,7 @@ class SendVerificationApi(Resource):
             current_user.email,
             get_confirmation_message(
                 current_user.email,
-                f'http://localhost:3000/auth/verification?token={token}'
+                f'{current_app.config.get("PUBLIC_URL")}/auth/verification?token={token}'
             )
         )
 

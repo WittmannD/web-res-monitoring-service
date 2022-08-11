@@ -3,6 +3,7 @@ import os
 
 class Config(object):
     PORT = os.environ.get('PORT')
+    PUBLIC_URL = os.environ.get('PUBLIC_URL')
 
     DEBUG = False
     TESTING = False
@@ -18,6 +19,8 @@ class Config(object):
 
 
 class ProductionConfig(Config):
+    ENV = 'production'
+    FLASK_ENV = 'production'
     SECRET_KEY = os.environ.get('SECRET_KEY')
 
 

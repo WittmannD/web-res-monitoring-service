@@ -1,7 +1,7 @@
 .env
 /client/.env
+Procfile.local
 .idea
 /client/node_modules/
-/client/build/
 __pycache__
 venv

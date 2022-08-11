@@ -29,7 +29,7 @@ function Header() {
             </Link>
           </Navbar.Brand>
           <Navbar.Toggle aria-controls="nav-toggle" />
-          <Navbar.Collapse className="justify-content-end" id="nav-toggle">
+          <Navbar.Collapse className="justify-content-end ps-5" id="nav-toggle">
             <Nav className="flex-fill">
               {!user.isAuth ? (
                 <>

@@ -14,8 +14,10 @@ class EmailVerificationApi(Resource):
     def post(current_user: UserModel, args):
         user = UserModel.find_by_id(args.get('id'))
 
+        print(args, current_user)
+
         if user is None or args.get('token_type') != 'VERIFICATION_TOKEN':
-            raise ApiError('Valid access token is missing', status=HTTPStatus.UNAUTHORIZED)
+            raise ApiError('Valid verification token is missing', status=HTTPStatus.UNAUTHORIZED)
 
         if current_user.id != user.id:
             raise ApiError('Access denied', status=HTTPStatus.FORBIDDEN)

@@ -34,7 +34,7 @@
   },
   "scripts": {
     "start": "env-cmd --no-override -f ../.env react-scripts start",
-    "build": "react-scripts build",
+    "build": "env-cmd --no-override -f ../.env react-scripts build",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

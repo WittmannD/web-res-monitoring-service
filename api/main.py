@@ -17,13 +17,13 @@ from api.resources.MonitoringApi import MonitoringApi
 from api.resources.MonitorApi import MonitorApi
 import api.utils.constants as constants
 from api.utils.utils import handle_error
+from api.routers import index
 
 
 def init_db(app):
     db.init_app(app)
 
     with app.app_context():
-        db.drop_all()
         db.create_all()
         db.session.commit()
 
@@ -45,9 +45,7 @@ def init_routes(api):
 def create_app():
     load_dotenv()
 
-    app = Flask(__name__)
-
-    app.register_error_handler(Exception, handle_error)
+    app = Flask(__name__, static_folder='../client/build')
 
     app.config.from_object(os.environ.get('FLASK_APP_SETTINGS'))
     init_db(app)
@@ -56,14 +54,16 @@ def create_app():
 
     api = Api(api_blueprint)
     CORS(api_blueprint)
+    api_blueprint.register_error_handler(Exception, handle_error)
 
     init_routes(api)
 
     app.register_blueprint(api_blueprint, url_prefix='/api/v1')
+    app.register_blueprint(index.blueprint)
 
     return app
 
 
 if __name__ == '__main__':
     flask_app = create_app()
-    flask_app.run(port=flask_app.config.get('PORT'))
+    flask_app.run(port=os.environ.get('PORT'), threaded=True)
