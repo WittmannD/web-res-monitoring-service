@@ -9,7 +9,7 @@ class Config(object):
     TESTING = False
     CSRF_ENABLED = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
+    SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI")
 
     SMTP_HOST = os.environ.get('SMTP_HOST')
     SMTP_PORT = os.environ.get('SMTP_PORT')
