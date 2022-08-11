@@ -14,7 +14,7 @@ load_dotenv()
 
 class DB:
     base = automap_base()
-    engine = sqlalchemy.create_engine(os.environ.get("DATABASE_URL"))
+    engine = sqlalchemy.create_engine(os.environ.get("SQLALCHEMY_DATABASE_URI"))
     base.prepare(autoload_with=engine, reflect=True)
     session = orm.Session(bind=engine)
 
