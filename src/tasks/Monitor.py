@@ -75,11 +75,13 @@ class Monitor:
                 )
                 db.session.add(event)
 
+            monitor = MonitorModel.find_by_id(self.data.get('id'))
             monitor_request = MonitorRequestsModel(**self.request_data)
-            self.data['status'] = monitor_status
+            monitor.status = monitor_status
 
             db.session.add(monitor_request)
-            db.session.merge(MonitorModel(**self.data))
+            db.session.add(monitor)
 
             db.session.commit()
-            task_logger.info(f'request to {self.data.get("url")} succeeded. elapsed {self.request_data.get("elapsed")}ms')
+            task_logger.info(
+                f'request to {self.data.get("url")} succeeded. elapsed {self.request_data.get("elapsed")}ms')

@@ -1,4 +1,5 @@
 from celery import group
+from celery.signals import task_postrun
 from celery.utils.log import get_task_logger
 
 from src.extensions import celery, db
@@ -25,3 +26,12 @@ def fetch_monitors():
 
     batch = group(check.s(monitor.as_json_serializable()) for monitor in monitors)
     batch()
+
+
+@task_postrun.connect
+def close_session(*args, **kwargs):
+    # Flask SQLAlchemy will automatically create new sessions for you from
+    # a scoped session factory, given that we are maintaining the same app
+    # context, this ensures tasks have a fresh session (e.g. session errors
+    # won't propagate across tasks)
+    db.session.remove()

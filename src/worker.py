@@ -1,6 +1,5 @@
-import os
-
 from celery import Celery
+from celery.schedules import crontab
 from celery.utils.log import get_task_logger, get_logger
 
 from src.app import create_worker_app
@@ -36,8 +35,4 @@ celery_app = create_celery(flask_app)
 
 @celery_app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    logger.info('check')
-    task_logger.info('check')
-    print('check', flush=True)
-    # Calls every 5 minutes.
-    sender.add_periodic_task(1.0 * 60, fetch_monitors.s(), name="check monitors every 5m")
+    sender.add_periodic_task(crontab(minute='*/5'), fetch_monitors.s(), name="check monitors every 5m")
