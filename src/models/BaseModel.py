@@ -4,7 +4,7 @@ from datetime import datetime, date
 from enum import Enum
 
 from sqlalchemy import event, DDL, inspect
-from flask_sqlalchemy import SQLAlchemy, Pagination
+from flask_sqlalchemy import SQLAlchemy
 from slugify import slugify
 
 from src.extensions import db
@@ -57,7 +57,7 @@ class BaseModel(db.Model):
         return cls.query.filter(stmt).filter_by(**kwargs).order_by(*ordering).all()
 
     @classmethod
-    def find_paginate_and_order_by(cls, page=1, per_page=10, order_by=None, stmt=True, **kwargs) -> Pagination:
+    def find_paginate_and_order_by(cls, page=1, per_page=10, order_by=None, stmt=True, **kwargs):
         if order_by is None:
             order_by = ['created_at desc']
 
@@ -69,7 +69,8 @@ class BaseModel(db.Model):
             direction = getattr(field, direction, field.desc)
             ordering.append(direction())
 
-        return cls.query.filter(stmt).filter_by(**kwargs).order_by(*ordering).paginate(page, per_page, error_out=False)
+        return cls.query.filter(stmt).filter_by(**kwargs).order_by(*ordering).paginate(page=page, per_page=per_page,
+                                                                                       error_out=False)
 
     def save_to_db(self):
         db.session.add(self)

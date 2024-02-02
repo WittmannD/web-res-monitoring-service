@@ -62,18 +62,17 @@ def handle_error(error):
         return abort(
             error.code,
             status='error',
-            messages=error.data.get('messages')
+            messages=error.data.get('messages'),
+            traceback=traceback.format_exc() if current_app.config.get('ENV') == 'development' else None
         )
 
     if isinstance(error, ApiError):
         return abort(
-            error.status,
+            error.status.value if isinstance(error.status, HTTPStatus) else error.status,
             status='error',
-            message=error.message
+            message=error.message,
+            traceback=traceback.format_exc() if current_app.config.get('ENV') == 'development' else None
         )
-
-    if current_app.config.get('ENV') == 'development':
-        return abort(HTTPStatus.INTERNAL_SERVER_ERROR, error=str(error), traceback=traceback.format_exc())
 
     return abort(HTTPStatus.INTERNAL_SERVER_ERROR)
 

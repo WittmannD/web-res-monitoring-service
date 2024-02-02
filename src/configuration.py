@@ -32,11 +32,11 @@ class Config(object):
     SECRET_KEY = os.environ.get('SECRET_KEY')
 
     BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
-    CELERY_BROKER_URL = BROKER_URL
     CELERY_TIMEZONE = os.environ.get("CELERY_TIMEZONE", "Europe/Berlin")
     CELERY_RESULT_BACKEND = os.environ.get(
         "CELERY_RESULT_BACKEND", "redis://localhost:6379/0"
     )
+    CELERY_BROKER_URL = BROKER_URL
     CELERY_SEND_SENT_EVENT = True
 
 

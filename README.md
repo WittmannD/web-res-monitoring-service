@@ -24,18 +24,20 @@ Implemented features:
 ### install dependencies
 
 ```shell
-python -m venv venv
+python3 -m venv venv
 source ./venv/bin/activate
-python -m pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 ### setup environment variables
 
 ```shell
 cat .env.example
-mv .env.example .env.development
+cp -p .env.example .env.development
 source .env.development
 ```
+
+Change the variables in .example.development with your values.
 
 ### start redis & postgresql via docker-compose
 

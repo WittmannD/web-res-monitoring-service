@@ -32,4 +32,4 @@ def create_worker_app():
 
 if __name__ == '__main__':
     flask_app = create_app()
-    flask_app.run(port=os.environ.get('PORT'), threaded=True)
+    flask_app.run(port=os.environ.get('PORT', 5000), threaded=True)
